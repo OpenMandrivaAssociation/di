@@ -5,7 +5,7 @@
 # NOTE	di has no builtin cmake tests, skipped %%check
 
 Name:		di
-Version:	6.0.0
+Version:	6.2.0
 Release:	1
 Summary:	Disk Information utility
 URL:		https://diskinfo-di.sourceforge.io/
@@ -74,7 +74,7 @@ zstd -r --rm man/*di.3
 
 
 %files -f %{name}.lang
-%doc README.txt
+%doc README.md
 %license LICENSE.txt
 %{_mandir}/man1/di.1.zst
 %{_bindir}/di
@@ -82,7 +82,7 @@ zstd -r --rm man/*di.3
 %files -n %{libname}
 %{_libdir}/lib%{name}.so
 %{_libdir}/lib%{name}.so.%{major}*
-%doc README.txt
+%doc README.md
 %license LICENSE.txt
 
 %files -n %{devname}
