@@ -1,11 +1,11 @@
 %define major 6
-%define libname lib%{name}%{major}
+%define libname %mklibname di
 %define devname %mklibname di -d
 
-# NOTE	di has no builtin cmake tests, skipped %%check
+%bcond tests 1
 
 Name:		di
-Version:	6.2.1
+Version:	6.2.2.2
 Release:	1
 Summary:	Disk Information utility
 URL:		https://diskinfo-di.sourceforge.io/
@@ -17,10 +17,12 @@ BuildRequires:	bash
 BuildRequires:	cmake
 BuildRequires:	coreutils
 BuildRequires:	gawk
+BuildRequires:	glibc-devel
 BuildRequires:	gettext
 BuildRequires:	grep
 BuildRequires:	intltool
 BuildRequires:	ninja
+BuildRequires:	pkgconfig
 BuildRequires:	pkgconfig(libtirpc)
 BuildRequires:	pkgconfig(gmp)
 BuildRequires:	pkgconfig(libtommath)
@@ -37,16 +39,19 @@ Great for heterogenous networks.
 
 %package -n %{libname}
 Summary:	Disk Information Utility shared library
+Group:		System/Libraries
+%rename libdi6
 
 %description -n %{libname}
 di (libdi) is a disk information utility library
 
 %package -n %{devname}
-Summary: Development files for the di disk information utility library
+Summary:	Development files for the di disk information utility library
+Group:	Development/C
+Requires:	%{libname} = %{version}-%{release}
 
 %description -n %{devname}
 Development files for the %{libname} disk information utility library.
-
 
 %prep
 %autosetup -p1
@@ -54,40 +59,43 @@ Development files for the %{libname} disk information utility library.
 %build
 export CFLAGS="%optflags"
 export LDFLAGS="%ldflags"
-%cmake	-DCMAKE_BUILD_TYPE=Release \
+%cmake	\
+	-DCMAKE_BUILD_TYPE=Release \
 	-G Ninja
 %ninja_build
 
 %install
-cd build
-%ninja_install
-cd ..
+%ninja_install -C build
 
+# set executable bit on example build script
+chmod +x %{buildroot}%{_datadir}/%{name}/examples/build.sh
 %find_lang %{name}
 # compress man pages
 zstd -r --rm man/*di.3
 
+%if %{with tests}
+%check
+%ninja -v -C build ditest
+%endif
 
 %post -n %{libname} -p /sbin/ldconfig
 
 %postun -n %{libname} -p /sbin/ldconfig
 
-
 %files -f %{name}.lang
 %doc README.md
 %license LICENSE.txt
+%{_bindir}/%{name}
 %{_mandir}/man1/di.1.zst
-%{_bindir}/di
 
 %files -n %{libname}
-%{_libdir}/lib%{name}.so
-%{_libdir}/lib%{name}.so.%{major}*
 %doc README.md
-%license LICENSE.txt
+%{_libdir}/lib%{name}.so.%{major}{,.*}
 
 %files -n %{devname}
-%{_includedir}/di.h
-%{_libdir}/libdi.so
+%license LICENSE.txt
+%{_datadir}/%{name}/examples
+%{_includedir}/%{name}.h
+%{_libdir}/lib%{name}.so
 %{_libdir}/pkgconfig/di.pc
 %{_mandir}/man3/libdi.3.zst
-%license LICENSE.txt
